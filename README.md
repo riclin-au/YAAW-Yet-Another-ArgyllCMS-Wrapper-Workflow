@@ -1,4 +1,5 @@
-YAAW: Yet Another Argyll Wrapper (or Workflow)
+
+
 YAAW is deliberately simple, lightweight printer profiling wrapper using the ArgyllCMS colour
 management software written by Graeme Gill of Argyll CMS in Melbourne, Australia. It is
 designed to be portable across platforms. Its approach is perhaps along the lines of LittleArgyllGUI,
