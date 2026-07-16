@@ -10,15 +10,14 @@ being accessible from the configuration page for reference. Developed and tested
 Mint and macOS, other platforms should work in principle but may need path/default-command
 adjustments.
 
-The initial Configuration screen provides editable presets for the most common options for each of
-the Argyll tools, with each tool having an additional field for adding further arguments if required.
-Profile directory names are auto-generated based on the contents of the Printer/Paper/Ink fields,
-with the filenames and internal description fields adding "Argyll_instrument_patchcount" to
-the directory name. This allows multiple profile runs at different patch densities and/or instruments
-to coexist, while also recording how each profile was generated, identifiably stored within a
-sensibly named parent directory. To simplify startup, a config from a similar session can be loaded
-at the Configuration screen and the parameters quickly edited to suit the new job before
-proceeding.
+The initial Configuration screen provides editable presets for each of the Argyll tools most common
+options, with each tool having an additional field for adding further arguments if required. Profile 
+directory names are auto-generated based on the contents of the Printer/Paper/Ink fields,with the 
+filenames and internal description fields adding "Argyll_instrument_patchcount" to the directory 
+name. This allows multiple profile runs at different patch densities and/or instruments to coexist, 
+while also recording how each profile was generated, identifiably stored within a sensibly named 
+parent directory. To simplify startup, a config from a similar session can be loaded at the 
+Configuration screen and the parameters quickly edited to suit the new job before proceeding.
 
 Patchcount and papersize settings are included for several instruments, although the default is for
 the ColorMunki. Targets are sized for A3 paper which is then printed condensed onto A4, with the
