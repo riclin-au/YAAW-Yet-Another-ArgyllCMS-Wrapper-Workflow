@@ -5,7 +5,7 @@ management software written by Graeme Gill of Argyll CMS in Melbourne, Australia
 designed to be portable across platforms. Its approach is perhaps along the lines of LittleArgyllGUI,
 and it is religiously committed to a KISS strategy, transparent in its operation, and written in pure
 Python with tkinter. Directly or indirectly, however, YAAW provides access to the full range of
-relevant ArgyllCMS printer profiling commands and settings, with man pages for each Argyll tool
+relevant ArgyllCMS printer profiling commands and settings, with documentation for each Argyll tool
 being accessible from the configuration page for reference. Developed and tested under both Linux
 Mint and macOS, other platforms should work in principle but may need path/default-command
 adjustments.
@@ -13,7 +13,7 @@ adjustments.
 The initial Configuration screen provides editable presets for the most common options for each of
 the Argyll tools, with each tool having an additional field for adding further arguments if required.
 Profile directory names are auto-generated based on the contents of the Printer/Paper/Ink fields,
-with the filenames and internal description fields adding "Argyll_<instrument>_<patchcount>" to
+with the filenames and internal description fields adding "Argyll_instrument_patchcount" to
 the directory name. This allows multiple profile runs at different patch densities and/or instruments
 to coexist, while also recording how each profile was generated, identifiably stored within a
 sensibly named parent directory. To simplify startup, a config from a similar session can be loaded
