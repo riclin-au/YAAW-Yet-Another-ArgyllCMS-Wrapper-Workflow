@@ -17,7 +17,7 @@ Copyright: Richard Lindner and contributors
 Coding assistance: Anthropic Claude; OpenAI ChatGPT
 License: MIT
 
-3.39.11: Successful project/config loads now update the screen silently; failed loads still show errors.
+3.39P.11: Successful project/config loads now update the screen silently; failed loads still show errors.
 3.39.13: Startup autosizing now uses a fixed sensible preferred width instead of expanding to Tk's full requested widget width on large displays.
 3.39.14: Patch-layout selector now sizes its Treeview rows/popup from actual font metrics to avoid clipped rows on high-DPI or large-font desktops.
 3.39.15: Patch-layout tables are now instrument-specific; non-CM instruments use clearly marked placeholder tables ready for experimental values. Instrument is now manually editable.
@@ -883,15 +883,17 @@ class PrinterProfilingGUI:
         section.pack(fill='x')
         
         self.create_field(section, "printer_name", "Printer Name:", "", 
-            "Name of your printer model")
+            "Printer Name or Model")
         self.create_field(section, "paper_name", "Paper Name:", "",
             "Type of paper being profiled")
         self.create_field(section, "ink_name", "Ink Type:", "",
             "Ink type (OEM, Third-party brand, etc.)")
         self.create_field(section, "profile_desc", "Profile Description:", "",
-            "Full description (auto-filled from above & Patches)")
+            "Full description (auto-filled from above & Patches)",
+            width=50)
         self.create_field(section, "basename", "Base Filename:", "",
-            "Base name for output files (auto-filled)")
+            "Base name for output files (auto-filled)",
+            width=50)
         
         # === Output Settings Section ===
         section = ttk.LabelFrame(scrollable_frame, text="Output Settings", padding="10")
@@ -987,11 +989,11 @@ class PrinterProfilingGUI:
         precond_frame.pack(fill='x', pady=(8, 2))
         ttk.Label(precond_frame, text="Preconditioning Profile:", width=25).pack(side='left')
         self.vars['precond_profile'] = tk.StringVar(value="")
-        precond_entry = ttk.Entry(precond_frame, textvariable=self.vars['precond_profile'], width=40)
+        precond_entry = ttk.Entry(precond_frame, textvariable=self.vars['precond_profile'], width=60)
         precond_entry.pack(side='left', padx=5)
         self.vars['precond_profile'].trace_add('write', lambda *a: precond_entry.after(10, lambda: precond_entry.xview_moveto(1)))
         ttk.Button(precond_frame, text="Browse...", command=self.browse_precond_profile).pack(side='left', padx=5)
-        ttk.Label(precond_frame, text="(-c)  Blank uses Argyll default; 'none' disables preconditioning",
+        ttk.Label(precond_frame, text="(-c)  Empty: Argyll default; 'none': disabled",
                   foreground='#555555', font=('TkDefaultFont', 9)).pack(side='left', padx=5)
 
         targen_extra_frame = ttk.Frame(section)
@@ -1141,14 +1143,12 @@ class PrinterProfilingGUI:
         section.pack(fill='x', padx=6, pady=(4, 8))
 
         # Rendering profile selection
-        self.create_field(section, "colprof_description", "Description:", "",
-            "-D  Profile description string")
-
+        self.create_field(section, "colprof_description", "Description:", "", "-D  Profile description string", width=60)
         source_frame = ttk.Frame(section)
         source_frame.pack(fill='x', pady=2)
         ttk.Label(source_frame, text="Rendering Profile:", width=25).pack(side='left')
         self.vars['rendering_profile'] = tk.StringVar(value="")
-        source_entry = ttk.Entry(source_frame, textvariable=self.vars['rendering_profile'], width=40)
+        source_entry = ttk.Entry(source_frame, textvariable=self.vars['rendering_profile'], width=60)
         source_entry.pack(side='left', padx=5)
         self.vars['rendering_profile'].trace_add('write', lambda *a: source_entry.after(10, lambda: source_entry.xview_moveto(1)))
         browse_source_btn = ttk.Button(source_frame, text="Browse...", command=self.browse_rendering_profile)
@@ -2166,20 +2166,28 @@ License: MIT
         text_widget.insert('1.0', about_text)
         text_widget.config(state='disabled')
     
-    def create_field(self, parent, var_name, label, default, tooltip=""):
+    def create_field(self, parent, var_name, label, default, tooltip="", width=40):
         """Create a labeled entry field"""
         frame = ttk.Frame(parent)
         frame.pack(fill='x', pady=2)
-        
+
         ttk.Label(frame, text=label, width=25).pack(side='left')
-        
+
         self.vars[var_name] = tk.StringVar(value=default)
-        entry = ttk.Entry(frame, textvariable=self.vars[var_name], width=40)
+        entry = ttk.Entry(
+            frame,
+            textvariable=self.vars[var_name],
+            width=width
+        )
         entry.pack(side='left', padx=5)
-        
+
         if tooltip:
-            ttk.Label(frame, text=f"({tooltip})", foreground='#555555', 
-                     font=('TkDefaultFont', 9)).pack(side='left')
+            ttk.Label(
+                frame,
+                text=f"({tooltip})",
+                foreground='#555555',
+                font=('TkDefaultFont', 9)
+            ).pack(side='left')
     
     def _current_auto_basename(self):
         """Return the operational Argyll basename, including instrument and patch count.
