@@ -60,7 +60,7 @@ License: MIT
 3.40.18: The detailed profcheck run now includes labelled Lab axes and exposes its generated interactive X3DOM through a browser-launch button that appears only while viewing the persistent project log.
 3.40.19: Swapped the logfile-view Live Output and X3DOM button positions so View Log and Live Output occupy the same screen position.
 3.40.20: The persistent profcheck summary now retains the harmless patch-count line without counting it against the ten highest delta-E result entries.
-3.40.21: Gamut Viewer now asks iccgamut to generate an independent X3DOM gamut model and provides a 3D Gamut browser button within the Profile Metrics panel. The passive Execution and About text panes now set explicit foreground, background, cursor, and selection colours to avoid platform/theme contrast mismatches.
+3.40.21: Gamut Viewer now asks iccgamut to generate an independent X3DOM gamut model and provides a 3D Gamut browser button within the Profile Metrics panel. The passive Execution and About text panes now set explicit foreground, background, cursor, and selection colours to avoid platform/theme contrast mismatches. The Execution screen now groups the persistent logfile, Show Gamut, and 3D Error Map under a Details mode. Clear Window and Current Settings are hidden while Details is shown, so the Details/Live Output toggle occupies the same screen position in both modes. Details is enabled for a loaded project when its completed working ICC exists, and after a successful Step 4; beginning any new workflow step invalidates and disables it. When Details is opened for an older completed project lacking the profcheck X3DOM file, YAAW generates the 3D Error Map on demand from the existing TI3 and ICC without rebuilding the profile.
 
 """
 
@@ -427,6 +427,7 @@ class PrinterProfilingGUI:
         self.run_log_file = None  # Persistent per-project log activated when a workflow step is run
         self._run_log_failed = False
         self._loading_config = False
+        self._details_available = False
         self.argyll_bin_dir = None
         self.argyll_doc_dir = None
         self.argyll_install_root = None
@@ -2124,20 +2125,45 @@ class PrinterProfilingGUI:
         control_frame = ttk.Frame(parent)
         control_frame.pack(fill='x', padx=5, pady=5)
         
-        ttk.Button(control_frame, text="Clear Window", command=self.clear_log, style="YAAWAction.TButton").pack(side='left', padx=5)
-        ttk.Button(control_frame, text="Current Settings", command=self.show_current_settings, style="YAAWAction.TButton").pack(side='left', padx=5)
-        ttk.Button(control_frame, text="View Gamut", command=self.show_gamut_viewer, style="YAAWAction.TButton").pack(side='left', padx=5)
-        # Expert-only companion to the persistent logfile.  It remains hidden in
-        # the normal live-output view and is packed immediately before View Log
-        # only when profcheck has actually generated its X3DOM HTML model.
+        self.clear_window_button = ttk.Button(
+            control_frame,
+            text="Clear Window",
+            command=self.clear_log,
+            style="YAAWAction.TButton"
+        )
+        self.clear_window_button.pack(side='left', padx=5)
+
+        self.current_settings_button = ttk.Button(
+            control_frame,
+            text="Current Settings",
+            command=self.show_current_settings,
+            style="YAAWAction.TButton"
+        )
+        self.current_settings_button.pack(side='left', padx=5)
+
+        # Inspection tools live under Details rather than cluttering the normal
+        # workflow view.  The Details/Live Output toggle itself remains packed in
+        # one fixed position; only its label changes.
+        self.details_gamut_button = ttk.Button(
+            control_frame,
+            text="Show Gamut",
+            command=self.show_gamut_viewer,
+            style="YAAWAction.TButton"
+        )
         self.profcheck_3d_button = ttk.Button(
             control_frame,
             text="3D Error Map",
             command=self.open_profcheck_3d_model,
             style="YAAWAction.TButton"
         )
-        self.view_log_button = ttk.Button(control_frame, text="View Log", command=self.toggle_project_log_view, style="YAAWAction.TButton")
+        self.view_log_button = ttk.Button(
+            control_frame,
+            text="Details",
+            command=self.toggle_project_log_view,
+            style="YAAWAction.TButton"
+        )
         self.view_log_button.pack(side='left', padx=5)
+        self.view_log_button.state(['disabled'])
         ttk.Button(control_frame, text="Abort", command=self.abort_session, style="YAAWAction.TButton").pack(side='right', padx=5)
     
     def create_about_tab(self, parent):
@@ -2641,22 +2667,67 @@ License: MIT
         self.log_text.insert('1.0', content)
         self.log_text.see(tk.END)
 
+    def _current_working_profile_exists(self):
+        """Return True when the current project has a completed working ICC.
+
+        This deliberately checks the ICC beside the project's Argyll files, not
+        an older installed copy under the output profile directory.
+        """
+        basename_var = self.vars.get('basename')
+        basename = basename_var.get().strip() if basename_var is not None else ''
+        if not basename:
+            return False
+        return (self.get_working_dir() / f"{basename}.icc").is_file()
+
+    def _set_details_available(self, available):
+        """Enable Details only after a successful current Step 4 result."""
+        available = bool(available)
+        self._details_available = available
+
+        # Do not leave stale project details visible when a new workflow run
+        # invalidates them.
+        if not available and getattr(self, '_showing_project_log', False):
+            self.toggle_project_log_view()
+
+        if hasattr(self, 'view_log_button'):
+            if available:
+                self.view_log_button.state(['!disabled'])
+            else:
+                self.view_log_button.state(['disabled'])
+
     def toggle_project_log_view(self):
-        """Toggle the main Execution pane between project log and live output."""
+        """Toggle the main Execution pane between Details and live output."""
+        if (not getattr(self, '_showing_project_log', False)
+                and not getattr(self, '_details_available', False)):
+            return
+
         if getattr(self, '_showing_project_log', False):
             self._showing_project_log = False
             self._replace_execution_display(getattr(self, '_live_output_text', ''))
             if hasattr(self, 'view_log_button'):
-                self.view_log_button.configure(text='View Log')
+                self.view_log_button.configure(text='Details')
+            if hasattr(self, 'details_gamut_button'):
+                self.details_gamut_button.pack_forget()
             if hasattr(self, 'profcheck_3d_button'):
                 self.profcheck_3d_button.pack_forget()
+
+            # Restore the normal live-output controls before the fixed toggle.
+            if hasattr(self, 'clear_window_button'):
+                self.clear_window_button.pack(
+                    side='left', padx=5, before=self.view_log_button
+                )
+            if hasattr(self, 'current_settings_button'):
+                self.current_settings_button.pack(
+                    side='left', padx=5, before=self.view_log_button
+                )
+
             self.set_status('Live output')
             return
 
         path = getattr(self, 'run_log_file', None) or self.get_project_log_path()
         if not path or not Path(path).exists():
             self.show_warning(
-                "View Log",
+                "Details",
                 "No persistent project log exists yet. Run a workflow step first."
             )
             return
@@ -2664,21 +2735,41 @@ License: MIT
         try:
             content = Path(path).read_text(encoding='utf-8', errors='replace')
         except OSError as exc:
-            self.show_error("View Log", f"Could not read the project log:\n{path}\n\n{exc}")
+            self.show_error("Details", f"Could not read the project log:\n{path}\n\n{exc}")
             return
 
         self._showing_project_log = True
         self._replace_execution_display(content)
+
         if hasattr(self, 'view_log_button'):
             self.view_log_button.configure(text='Live Output')
+
+        # Clear Window and Current Settings apply to live output rather than the
+        # persistent logfile, so hide them in Details mode. Their two positions
+        # are then occupied by Show Gamut and 3D Error Map, leaving the toggle
+        # exactly where Details was.
+        if hasattr(self, 'clear_window_button'):
+            self.clear_window_button.pack_forget()
+        if hasattr(self, 'current_settings_button'):
+            self.current_settings_button.pack_forget()
+
+        if hasattr(self, 'details_gamut_button'):
+            self.details_gamut_button.pack(
+                side='left', padx=5, before=self.view_log_button
+            )
+
+        # Older completed projects may predate X3DOM generation. Build only
+        # the missing profcheck error map from their existing TI3 and ICC.
+        self._ensure_profcheck_3d_model()
         model_path = self.get_profcheck_3d_model_path()
         if model_path and model_path.exists() and hasattr(self, 'profcheck_3d_button'):
             self.profcheck_3d_button.pack(
-                side='left', padx=5, after=self.view_log_button
+                side='left', padx=5, before=self.view_log_button
             )
         elif hasattr(self, 'profcheck_3d_button'):
             self.profcheck_3d_button.pack_forget()
-        self.set_status(f"Viewing project log: {Path(path).name}")
+
+        self.set_status(f"Viewing project details: {Path(path).name}")
 
     def get_profcheck_3d_model_path(self):
         """Return the expected profcheck X3DOM HTML path for this project."""
@@ -2687,6 +2778,77 @@ License: MIT
         if not basename:
             return None
         return self.get_working_dir() / f"{basename}.x3d.html"
+
+    def _ensure_profcheck_3d_model(self):
+        """Generate a missing profcheck X3DOM for an older completed project.
+
+        This is deliberately limited to the existing measured TI3 and working
+        ICC. It does not rerun colprof or otherwise rebuild the profile.
+        """
+        model_path = self.get_profcheck_3d_model_path()
+        if model_path and model_path.is_file():
+            return True
+
+        basename_var = self.vars.get('basename')
+        basename = basename_var.get().strip() if basename_var is not None else ''
+        if not basename:
+            return False
+
+        working_dir = self.get_working_dir()
+        ti3_path = working_dir / f"{basename}.ti3"
+        icc_path = working_dir / f"{basename}.icc"
+        if not ti3_path.is_file() or not icc_path.is_file():
+            return False
+
+        self.set_status("Generating 3D Error Map...")
+        try:
+            result = subprocess.run(
+                [
+                    'profcheck', '-v2', '-s', '-w', '-x',
+                    ti3_path.name, icc_path.name
+                ],
+                cwd=str(working_dir),
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+        except FileNotFoundError:
+            self.log("WARNING: profcheck not found; could not generate the 3D Error Map.")
+            return False
+        except subprocess.TimeoutExpired:
+            self.log("WARNING: profcheck timed out while generating the 3D Error Map.")
+            return False
+        except OSError as exc:
+            self.log(f"WARNING: Could not generate the 3D Error Map: {exc}")
+            return False
+
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or '').strip()
+            if detail:
+                detail = detail[:600]
+                self.log(
+                    f"WARNING: profcheck could not generate the 3D Error Map "
+                    f"(code {result.returncode}): {detail}"
+                )
+            else:
+                self.log(
+                    f"WARNING: profcheck could not generate the 3D Error Map "
+                    f"(code {result.returncode})."
+                )
+            return False
+
+        if model_path and model_path.is_file():
+            self.log(
+                f"Generated missing profcheck 3D Error Map for loaded project: "
+                f"{model_path.name}"
+            )
+            return True
+
+        self.log(
+            "WARNING: profcheck completed but did not create the expected "
+            f"3D Error Map: {model_path}"
+        )
+        return False
 
     def get_gamut_3d_model_path(self):
         """Return the independent iccgamut X3DOM HTML path for this project."""
@@ -2702,7 +2864,7 @@ License: MIT
         if not path or not path.exists():
             self.show_warning(
                 "3D Gamut",
-                "No iccgamut 3D Error Map model exists for the current profile.\n\n"
+                "No iccgamut X3DOM model exists for the current profile.\n\n"
                 "Open View Gamut again to generate it."
             )
             return
@@ -2727,8 +2889,8 @@ License: MIT
         path = self.get_profcheck_3d_model_path()
         if not path or not path.exists():
             self.show_warning(
-                "3D Error Map",
-                "No profcheck 3D Error Map exists for the current project.\n\n"
+                "X3DOM",
+                "No profcheck X3DOM exists for the current project.\n\n"
                 "Build the profile with Step 4 first."
             )
             return
@@ -2736,13 +2898,13 @@ License: MIT
             opened = webbrowser.open_new(path.resolve().as_uri())
         except Exception as exc:
             self.show_error(
-                "3D Error Map",
-                f"Could not open the 3D Error Map:\n{path}\n\n{exc}"
+                "X3DOM",
+                f"Could not open the X3DOM:\n{path}\n\n{exc}"
             )
             return
         if not opened:
             self.show_error(
-                "3D Error Map",
+                "X3DOM",
                 f"The system browser could not open:\n{path}"
             )
             return
@@ -3008,6 +3170,11 @@ License: MIT
                     except Exception:
                         pass
 
+                # A loaded completed project is immediately inspectable.  An
+                # installed ICC elsewhere is not enough: Details belongs to this
+                # working project and its own profile/log outputs.
+                self._set_details_available(self._current_working_profile_exists())
+
                 # Successful loads are silent; the updated Configuration screen is enough.
                 self.set_status("Ready")
                 self.notebook.select(0)
@@ -3108,6 +3275,7 @@ License: MIT
         # Recompute derived fields so older saved sessions gain the patch-count
         # suffix in Profile Description / Base Filename / colprof -D.
         self.autofill_fields()
+        self._set_details_available(self._current_working_profile_exists())
     
     def save_session(self, last_step_completed=None):
         """Save transient crash-recovery session only.
@@ -3621,6 +3789,7 @@ License: MIT
             self.log("Step 1 cancelled; existing files preserved.")
             return
 
+        self._set_details_available(False)
         self._activate_project_log(basename, "Step 1 - targen")
         self.save_session()
         self.save_project_config(log_message=True)
@@ -3651,6 +3820,7 @@ License: MIT
             self.log("Step 2 cancelled; existing files preserved.")
             return
 
+        self._set_details_available(False)
         self._activate_project_log(basename, "Step 2 - printtarg")
         self.save_session()
         self.save_project_config(log_message=True)
@@ -3696,6 +3866,7 @@ License: MIT
             self.log("Step 3 cancelled; existing files preserved.")
             return
 
+        self._set_details_available(False)
         self._activate_project_log(basename, "Step 3 - chartread")
         self.save_session()
         self.save_project_config(log_message=True)
@@ -3729,6 +3900,7 @@ License: MIT
             self.log("Step 4 cancelled; existing files preserved.")
             return
 
+        self._set_details_available(False)
         self._activate_project_log(basename, "Step 4 - colprof/profcheck")
         self.save_session()
         self.save_project_config(log_message=True)
@@ -3736,10 +3908,12 @@ License: MIT
         def task():
             try:
                 self._step4_build_profile(basename, settings)
+                self._ui_call(self._set_details_available, True)
             except Exception as e:
+                self._ui_call(self._set_details_available, False)
                 self.log(f"ERROR: {e}")
                 self.show_error("Error", str(e))
-        
+
         threading.Thread(target=task, daemon=True).start()
     
     # === Workflow Step Implementations ===
@@ -4288,7 +4462,7 @@ License: MIT
             cwd=working_dir,
             max_lines=10,
             quota_exempt_prefixes=("No of test patches",),
-            heading="profcheck highest delta-E results (10 entries; 3D Error Map generated with Lab axes):"
+            heading="profcheck highest delta-E results (10 entries; X3DOM generated with Lab axes):"
         )
 
         # Copy profile to output directory
@@ -4850,7 +5024,7 @@ License: MIT
         if not gamut_3d_path.exists():
             self.log(
                 f"WARNING: iccgamut created {gam_path.name} but did not create "
-                f"the expected 3D Error Map model {gamut_3d_path.name}."
+                f"the expected X3DOM model {gamut_3d_path.name}."
             )
 
         # --- Parse the .gam file (CGATS format) ---
