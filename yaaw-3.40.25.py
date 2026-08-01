@@ -650,6 +650,17 @@ def safe_filename_token(value, fallback='custom'):
     return token or fallback
 
 
+def default_printtarg_imgtype():
+    """Return the platform-appropriate default print-target format.
+
+    Current macOS releases do not natively display PostScript, so default to
+    an ordinary 16-bit TIFF there.  Retain PostScript elsewhere because one PS
+    file can contain a multi-page target.  Saved project settings and explicit
+    user selections still override this startup/reset default.
+    """
+    return 'TIFF 16-bit (-T 300)' if sys.platform == 'darwin' else 'PS (Postscript)'
+
+
 def printtarg_paper_size_arg(display_value):
     """Translate GUI paper-size labels to printtarg -p arguments.
 
@@ -738,15 +749,21 @@ INSTRUMENT_LAYOUTS = {
 EMPIRICAL_LAYOUTS = INSTRUMENT_LAYOUTS['CM']
 
 INSTRUMENT_LABELS = {
-    'CM': 'CM / ColorMunki',
-    'i1': 'i1 / i1Pro',
-    '3p': '3p / i1Pro3+',
-    'SS': 'SS / SpectroScan',
+    'CM': 'ColorMunki (CM)',
+    'i1': 'i1Pro (i1)',
+    '3p': 'i1Pro3+ (3p)',
+    'SS': 'SpectroScan (SS)',
+    '20': 'X-Rite DTP20 (20)',
+    '22': 'X-Rite DTP22 (22)',
+    '41': 'X-Rite DTP41 (41)',
+    '51': 'X-Rite DTP51 (51)',
 }
 
-# Less common Argyll instrument codes retained here for users who want to add
-# them back into the selector list later:
-# INSTRUMENT_CODES_EXTRA = ['20', '22', '41', '51']
+# Complete printtarg -i set documented by ArgyllCMS. Keep YAAW's current,
+# most likely instruments first, followed by the supported legacy devices.
+PRINTTARG_INSTRUMENT_CODES = ('CM', 'i1', '3p', 'SS', '20', '22', '41', '51')
+PRINTTARG_INSTRUMENT_NAMES = tuple(INSTRUMENT_LABELS[code] for code in PRINTTARG_INSTRUMENT_CODES)
+INSTRUMENT_CODE_BY_NAME = {name: code for code, name in INSTRUMENT_LABELS.items()}
 
 
 def normalise_instrument_code(instrument):
@@ -1300,17 +1317,17 @@ class YAAW_GUI:
         top_instr_frame = ttk.Frame(basic_header)
         top_instr_frame.pack(side='right')
         ttk.Label(top_instr_frame, text="Instrument:", font=('TkDefaultFont', 10, 'bold')).pack(side='left', padx=(0, 5))
+        self.instrument_display_var = tk.StringVar(value=instrument_label('CM'))
         top_instr_combo = ttk.Combobox(
             top_instr_frame,
-            textvariable=self.vars['printtarg_instrument'],
-            values=['CM', 'i1', '3p'],
-            width=10,
-            state='normal'
+            textvariable=self.instrument_display_var,
+            values=PRINTTARG_INSTRUMENT_NAMES,
+            width=22,
+            state='readonly'
         )
         self.top_instrument_combo = top_instr_combo
         top_instr_combo.pack(side='left')
-        top_instr_combo.bind('<<ComboboxSelected>>', lambda e: self._on_instrument_changed(), add='+')
-        top_instr_combo.bind('<FocusOut>', lambda e: self._on_instrument_changed(), add='+')
+        top_instr_combo.bind('<<ComboboxSelected>>', self._on_instrument_display_selected, add='+')
 
         section = ttk.LabelFrame(basic_outer, text="", padding="10")
         section.pack(fill='x')
@@ -1402,6 +1419,8 @@ class YAAW_GUI:
         device_space_entry.configure(state='readonly')
         device_space_entry.grid(
             row=0, column=1, sticky='w', padx=(0, 2), pady=3)
+        grid_hint(0, 2, "(-d2)")
+
 
         grid_label(0, 3, "Patches:")
         # Keep the visible Patches control the same compact combobox style as
@@ -1455,32 +1474,37 @@ class YAAW_GUI:
         section = ttk.LabelFrame(scrollable_frame, text="printtarg Settings", padding="10")
         section.pack(fill='x', padx=6, pady=(4, 8))
 
-        # Instrument (-i)
+        # Instrument (-i) is selected once in the Basic Information header.
+        # Show the linked value here as a read-only reminder rather than a
+        # second selector that could imply an independent setting.
         instr_frame = ttk.Frame(section)
         instr_frame.pack(fill='x', pady=2)
         ttk.Label(instr_frame, text="Instrument:", width=25).pack(side='left')
-        instr_combo = ttk.Combobox(instr_frame, textvariable=self.vars['printtarg_instrument'],
-                                   values=['CM', 'i1', '3p'],
- #                                  values=['CM', 'i1', '3p', 'SS', '20', '22', '41', '51'],
-                                   width=10, state='normal')
-        self.instrument_combo = instr_combo
-        instr_combo.pack(side='left', padx=5)
-        instr_combo.bind('<<ComboboxSelected>>', lambda e: self._on_instrument_changed(), add='+')
-        instr_combo.bind('<FocusOut>', lambda e: self._on_instrument_changed(), add='+')
-        ttk.Label(instr_frame, text="(-i)  CM=ColorMunki (default), i1=i1Pro, 3p=i1Pro3+; other Argyll codes may be typed manually",
+        self.printtarg_instrument_display_var = tk.StringVar(value=instrument_label('CM'))
+        ttk.Label(
+            instr_frame,
+            textvariable=self.printtarg_instrument_display_var,
+            width=22,
+            anchor='w'
+        ).pack(side='left', padx=5)
+        ttk.Label(instr_frame, text="(-i)  selected above",
                   foreground='#555555', font=('TkDefaultFont', 9)).pack(side='left', padx=5)
 
         # Output Image Type (no flag=PS / -e=EPS / -t=TIFF 8bit / -T=TIFF 16bit)
         imgtype_frame = ttk.Frame(section)
         imgtype_frame.pack(fill='x', pady=2)
         ttk.Label(imgtype_frame, text="Output Image Type:", width=25).pack(side='left')
-        self.vars['printtarg_imgtype'] = tk.StringVar(value="PS (Postscript)")
+        self.vars['printtarg_imgtype'] = tk.StringVar(value=default_printtarg_imgtype())
         imgtype_combo = ttk.Combobox(imgtype_frame, textvariable=self.vars['printtarg_imgtype'],
                                      values=['PS (Postscript)', 'EPS (-e)', 'TIFF 8-bit (-t 300)', 'TIFF 16-bit (-T 300)'],
                                      width=22, state='readonly')
         imgtype_combo.pack(side='left', padx=5)
-        ttk.Label(imgtype_frame, text="Default: TIFF 16-bit (-T 300)",
-                  foreground='#555555', font=('TkDefaultFont', 9)).pack(side='left', padx=5)
+        ttk.Label(
+            imgtype_frame,
+            text=("Default: TIFF 16-bit" if sys.platform == 'darwin'
+                  else "Default: Postscript"),
+            foreground='#555555', font=('TkDefaultFont', 9)
+        ).pack(side='left', padx=5)
 
         # Hexagon/DD Patches (-h)
         hex_frame = ttk.Frame(section)
@@ -1488,7 +1512,7 @@ class YAAW_GUI:
         ttk.Label(hex_frame, text="Hexagon/DD Patches:", width=25).pack(side='left')
         self.vars['printtarg_hexagon'] = tk.BooleanVar(value=True)
         ttk.Checkbutton(hex_frame, variable=self.vars['printtarg_hexagon']).pack(side='left', padx=5)
-        ttk.Label(hex_frame, text="(-h)  Default: Selected",
+        ttk.Label(hex_frame, text="(-h)  Default: Selected for CM and SS",
                   foreground='#555555', font=('TkDefaultFont', 9)).pack(side='left', padx=5)
 
         # Paper Size (-p)
@@ -1696,6 +1720,19 @@ class YAAW_GUI:
         var = self.vars.get('printtarg_instrument')
         return normalise_instrument_code(var.get() if var is not None else 'CM')
 
+    def _printtarg_hexagon_default_for_current_instrument(self):
+        """Return the default printtarg -h state for the selected instrument."""
+        return self._current_instrument_code() in ('CM', 'SS')
+
+    def _apply_printtarg_hexagon_default(self):
+        """Sync Hexagon/DD Patches with the selected instrument's default."""
+        var = self.vars.get('printtarg_hexagon')
+        if var is not None:
+            try:
+                var.set(self._printtarg_hexagon_default_for_current_instrument())
+            except Exception:
+                pass
+
     def _chartread_highres_default_for_current_instrument(self):
         """Return YAAW's default chartread -H state for the current instrument.
 
@@ -1730,8 +1767,29 @@ class YAAW_GUI:
         except Exception:
             return sorted(values)
 
+    def _on_instrument_display_selected(self, event=None):
+        """Translate the full-name selector display back to Argyll's code."""
+        display = self.instrument_display_var.get().strip()
+        code = INSTRUMENT_CODE_BY_NAME.get(display)
+        if code:
+            self.vars['printtarg_instrument'].set(code)
+
+    def _sync_instrument_displays(self):
+        """Keep the full-name selector and printtarg reminder aligned to the code."""
+        label = instrument_label(self._current_instrument_code())
+        try:
+            if self.instrument_display_var.get() != label:
+                self.instrument_display_var.set(label)
+        except Exception:
+            pass
+        try:
+            self.printtarg_instrument_display_var.set(label)
+        except Exception:
+            pass
+
     def _on_instrument_changed(self):
         """Refresh patch-layout guidance and generated names after Instrument changes."""
+        self._sync_instrument_displays()
         try:
             if hasattr(self, 'patches_combo'):
                 self.patches_combo.configure(values=self._patch_values_for_current_instrument())
@@ -1739,7 +1797,8 @@ class YAAW_GUI:
             pass
         if getattr(self, '_loading_config', False):
             return
-        # Keep chartread's -H default conservative for i1/i1Pro and i1Pro3+.
+        # Apply instrument-specific defaults for printtarg -h and chartread -H.
+        self._apply_printtarg_hexagon_default()
         self._apply_chartread_highres_default()
         # Instrument is now part of the generated basename/profile description,
         # so changing it must update those derived fields just like changing
@@ -3712,7 +3771,7 @@ License: MIT
             'targen_black_patches': '4',
             'targen_extra_args': '',
             'printtarg_instrument': 'CM',
-            'printtarg_imgtype': 'PS (Postscript)',
+            'printtarg_imgtype': default_printtarg_imgtype(),
             'printtarg_hexagon': True,
             'printtarg_extra_args': '',
             'chartread_threshold': '1',
@@ -4459,6 +4518,11 @@ License: MIT
                 'i1pro3', 'i1 pro 3', 'i1pro 3', 'i1 pro3',
                 'efi es3000',
             ),
+            'SS': ('spectroscan', 'spectro scan'),
+            '20': ('dtp20', 'dtp 20', 'pulse'),
+            '22': ('dtp22', 'dtp 22'),
+            '41': ('dtp41', 'dtp 41'),
+            '51': ('dtp51', 'dtp 51'),
         }
         for alias in aliases.get(selected, (selected,)):
             alias_text = re.sub(r'[^a-z0-9]+', ' ', alias.lower()).strip()
