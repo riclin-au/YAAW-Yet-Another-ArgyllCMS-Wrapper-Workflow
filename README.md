@@ -40,10 +40,12 @@ The Configuration page provides editable presets for the commonly used options o
 chartread, and colprof. Each tool also has an Additional Arguments field, allowing less-common
 ArgyllCMS options to be added without changing YAAW itself. Built-in help buttons open the installed
 ArgyllCMS HTML documentation in YAAW's native viewer.
+
 Printer, paper, ink, instrument, paper size, and patch count are used to generate a readable project
 identity. The working directory records the printer/paper/ink combination, while generated filenames and
 internal descriptions include the instrument and patch count. This permits several profile runs for the
 same paper to coexist without becoming anonymous.
+
 Project configurations are saved as JSON files and can be reloaded later. A similar job can therefore be
 used as a template: load it, change the paper or another identifying field, and continue with the new run.
 
@@ -51,13 +53,15 @@ used as a template: load it, change the paper or another identifying field, and 
 **2. Target generation and printing**
 
 Instrument-specific patch-layout tables provide practical paper-size and patch-count choices. The
-ColorMunki layouts are author-tested; i1 and i1Pro3+ entries are based on printtarg output and may
-require confirmation with the physical instrument. Instrument, patch count, and paper size remain
-manually editable, so custom combinations are not blocked.
+ColorMunki layouts are author-tested; other entries are based on printtarg output and may require
+confirmation with the physical instrument. Instrument, patch count, and paper size remain manually 
+editable, so custom combinations are not blocked.
+
 YAAW supports multi-page targets and deliberately allows larger nominal targets to be printed at a
 reduced physical size. A3 targets may be condensed onto A4, and rotated A2R targets may be printed
 onto A3. This permits substantially higher patch densities while retaining reliable strip reading when a
 suitable guide is used.
+
 For the ColorMunki, proven examples include 460 patches on one A4 sheet and 960 patches on one
 A3 sheet. Standard lower-density Argyll layouts remain available, and further condensation may be
 explored with printtarg's -a option through Additional Arguments.
@@ -68,6 +72,7 @@ explored with printtarg's -a option through Additional Arguments.
 chartread runs in a lightweight terminal-style window connected to a pseudo-terminal on Linux and
 macOS. Calibration prompts, strip-reading progress, warnings, and instrument messages remain visible
 while the relevant keyboard input is passed directly to chartread.
+
 Before measurement begins, YAAW asks ArgyllCMS to enumerate connected instruments and checks
 that the selected instrument family is present. This catches missing or mismatched hardware before
 overwrite prompts or target reading begin.
