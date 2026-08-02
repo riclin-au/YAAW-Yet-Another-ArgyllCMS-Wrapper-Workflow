@@ -146,16 +146,27 @@ script and may be edited where local conventions differ.
 **Current feature summary**
 
 • Automatic field population and readable project naming
+
 • Editable instrument, patch-count, and paper-size controls
+
 • Instrument-specific empirical layout guidance
+
 • ICC preconditioning and rendering-profile support
+
 • Optional arguments for every principal Argyll profiling command
+
 • Multi-page and condensed target workflows
+
 • Connected-instrument preflight before chartread
+
 • Pseudo-terminal chartread interaction on Linux and macOS
+
 • Persistent logs, saved JSON configurations, and crash recovery
+
 • Profile validation with compact and detailed profcheck output
+
 • Static gamut plots, profile metrics, 3D gamut, and 3D profile-error map
+
 • Portable use of the system browser for X3DOM visualisations
 
 **Scope**
