@@ -78,7 +78,8 @@ the configured ICC output directory, which defaults to:
 profcheck then performs a compact validation and records a more detailed sorted report in the
 persistent project logfile. The report includes the highest delta-E patches and can generate a rotatable
 3D profile-error map showing measured-versus-predicted Lab residuals.
-Inspection and diagnostics
+
+**Inspection and diagnostics**
 
 Once Step 4 has completed successfully, the Execution page enables a Details view. This replaces the
 live-output display with the persistent project logfile and exposes the inspection tools:
