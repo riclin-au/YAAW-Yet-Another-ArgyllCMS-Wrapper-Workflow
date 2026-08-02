@@ -26,7 +26,7 @@ configuration.
 
 • KISS first: useful diagnostics are available, but the primary workflow remains four clear steps.
 
-The profiling workflow
+**The profiling workflow**
 
 YAAW organises the normal printer-profiling process into four stages: Create Target, Print Target,
 Read Target, and Build Profile.
