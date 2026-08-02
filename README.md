@@ -12,12 +12,17 @@ should work in principle, although paths, default applications, and platform-spe
 may require adjustment.
 
 Design philosophy
+
 • Pure Python and tkinter: no GUI framework or browser-engine dependency is required.
+
 • Transparent operation: the ArgyllCMS command lines remain visible, editable, and logged.
+
 • Conservative automation: YAAW assists with the workflow but does not attempt to second-guess
 ArgyllCMS.
+
 • Portable project data: each job retains its targets, measurements, profile, logs, and JSON
 configuration.
+
 • KISS first: useful diagnostics are available, but the primary workflow remains four clear steps.
 
 The profiling workflow
