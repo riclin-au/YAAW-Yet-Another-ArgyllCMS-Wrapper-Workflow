@@ -100,11 +100,17 @@ from the measured patches.
 **Logging, persistence, and safety**
 
 • A persistent logfile records commands, diagnostics, warnings, and profile-validation results.
+
 • The live Execution output is maintained separately from the persistent logfile.
+
 • Each profiling job stores a complete JSON configuration beside its Argyll files.
+
 • Crash recovery preserves the active session and can resume from the last meaningful stage.
+
 • Overwrite checks protect existing targets, measurements, profiles, and related files.
+
 • Starting a new workflow step invalidates stale Details state until a new Step 4 succeeds.
+
 • Previously installed ICC profiles are not removed merely because a later rebuild fails.
 
 **Typical staged-printing workflow**
