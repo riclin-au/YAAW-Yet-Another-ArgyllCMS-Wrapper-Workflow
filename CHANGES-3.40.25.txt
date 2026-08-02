@@ -1,0 +1,193 @@
+Condensed Changelog Summary
+===========================
+
+Changes since v3.11:
+
+- Added patch-count-aware Argyll basenames, e.g. Printer_Paper_Ink-Argyll_460.
+- Separated YAAW working files from installed ICC profile output.
+- Added editable path defaults near the top of the script.
+- Changed default working root to ~/ColourManagement/YAAW.
+- Changed default ICC output to ~/.local/share/color/icc.
+- Added 460, 920, 960, and 1920 patch-count options.
+- Changed default patch count to 460.
+- Changed default paper size to A3 and added 594x420 rotated A2/A3 workflow support.
+- Added optional extra-argument fields for targen, printtarg, chartread, and colprof.
+- Added one-click man-page buttons for targen, printtarg, chartread, and colprof.
+- Added overwrite/stale-file warnings before workflow steps.
+- Added persistent per-project JSON config files.
+- Added persistent per-project run logs.
+- Show Current  audit/debug button.
+- Added CGATS endpoint diagnostics for .ti1/.ti2/.ti3 files.
+- Relaxed exact-white validation to allow valid printtarg near-white behaviour.
+- Added zero-byte failed-profile cleanup.
+- Improved mac)S behavioour
+- Improved shell quoting and extra-argument parsing.
+- Updated About tab, version text, and MIT/license/assistance metadata.
+- Optimized opening window dimensions
+
+v3.9.18:
+
+- Added wider, more readable YAAW confirmation/warning dialogs.
+- Added instrument-aware filename/profile naming:
+  <printer>_<paper>_<ink>-Argyll_<instrument>_<patchcount>
+- Added editable Paper Size field with A3R/A2R rotated aliases.
+- Added A3R mapping to 420x297 and A2R mapping to 594x420.
+- Added/updated instrument-specific patch-layout tables for CM, i1, and 3p.
+- ColorMunki layouts are author-tested; i1/i1Pro3+ layouts are printtarg-generated and require 
+physical-device confirmation.
+
+3.39.19: chartread now enables -H by default only for CM/ColorMunki; i1/i1Pro and 3p/i1Pro3+ omit 
+-H unless manually added in Additional chartread Args.
+3.39.20: Added a linked Instrument selector beside the Basic Information heading so the target 
+instrument is chosen before other settings.
+3.39.21: Kept the scrollable configuration page fitted to the visible canvas width so right-aligned 
+header controls remain visible.
+
+3.39.22:
+
+- Preconditioning Profile now defaults to blank - The hint now reads: "Optional ICC/MPP profile; 
+leave blank for Argyll default"
+- Old saved configs containing none are still treated safely as blank and do not pass -c none.
+- Resetting YAAW now restores a blank field.
+- Session loading no longer converts a blank field back to none.
+- Logging now clearly states that -c was omitted and s default model is being used.
+
+3.39.24:
+
+- search at startup to locate binary and documentation PATHs. 
+- Use html helpfiles since GG has changed from manpage format.
+
+3.40.0
+- Code cleanup
+- Stable release of the resizable four-panel Gamut Viewer with responsive plots, clearer reference 
+markers, L* guides, and scalable metrics text.
+
+3.40.1:
+- Internal build: Step 3 chartread terminal now closes automatically when chartread exits; removed 
+the redundant modal launch acknowledgement.
+
+3.40.2: 
+- Local and confirmed online HTML documentation now requests a new browser window rather than a new 
+tab, while remaining browser- and distribution-neutral.
+
+3.40.3: 
+- Internal build: chartread now runs in a YAAW pseudo-terminal window on Linux/macOS; external 
+terminal launch remains as fallback. The live window retains the complete session, while the 
+project log records concise instrument/calibration information plus warnings and errors. chartread 
+terminal bell cues are replayed through Tk, and the window closes automatically after a clean exit.
+- Carriage-return progress counters are condensed into space-separated lines in the screen and 
+project logs
+- View Log now toggles the main Execution display between the persistent project logfile and an 
+independent live-output buffer; no separate viewer window is opened.
+- Main navigation and Execution action buttons use a persistent bold font at exactly the normal 
+interface text size; in-form buttons remain unchanged
+3.40.4:
+- Help buttons now display ArgyllCMS HTML documentation in a built-in Tk viewer window instead of 
+handing off to an external web browser. Local documentation pages can be followed and navigated in 
+place; a confirmed online page is shown read-only, with any links on it opened in the system 
+browser rather than fetched automatically.
+
+3.40.5:
+- Local HTML documentation that exists but isn't readable by the current user (e.g. ArgyllCMS 
+unpacked as root under /opt) is now detected before attempting to display it. The 
+online-documentation prompt explains the permission problem and gives the chmod command to fix it, 
+instead of the viewer just showing a raw PermissionError.
+
+3.40.6:
+- Dropped the optional tkinterweb dependency entirely (not packaged for Ubuntu/Mint). The 
+documentation viewer now always uses YAAW's own native-tkinter HTML renderer, with no external 
+package required or used.
+
+3.40.7: 
+- Fixed a documentation-viewer bug where pages rendered completely blank. The renderer was treating 
+void elements like <meta> and <link> (which have no closing tag) as depth-tracked "skip" regions; 
+any <head> with more than one <meta> tag - i.e. almost every real HTML page - left the skip counter 
+stuck above zero, silently suppressing the entire rest of the document including <body>.
+
+3.40.8: 
+- Fixed internal HTML links not resolving. In-page anchor links (href="#Section", e.g. a "Usage" 
+contents list at the top of a command's doc page) previously did nothing at all. The renderer now 
+tracks id="..." and <a name="..."> targets while parsing and scrolls to them, both for same-page 
+"#fragment" links and for cross-page links like "colprof.html#Notes".
+
+3.40.9:
+- The documentation viewer's Back button is now greyed out whenever there's nowhere to go back to 
+(i.e. before you've followed a link within the viewer). Previously it was always clickable but 
+silently did nothing until you had 
+navigated forward at least once, which looked identical to it being broken.
+
+3.40.10:
+- Fixed Back doing nothing after following an in-page anchor link (e.g. jumping from a "Usage" 
+contents list down to a heading on the same page). Anchor jumps are now recorded in the viewer's 
+navigation history alongside full page loads, so Back correctly scrolls back to where you were 
+before the jump - matching ordinary browser behaviour.
+
+3.40.11:
+- Added an Exit button at the extreme top right, immediately after Load Config.
+
+3.40.12:
+- Added chartread -r resume and -p patch-by-patch controls; introduced a restrained portable visual 
+refresh with a lighter neutral background, clearer hint text, stronger section headings, slightly 
+airier spacing, accented workflow buttons, and improved monospaced execution displays.
+
+3.40.13:
+- Removed redundant help-row hint text and right-aligned the targen, printtarg, chartread, and 
+colprof Help buttons.
+
+3.40.14:
+- Step 4 now records the first ten lines of profcheck -v2 -s -w output in the persistent project 
+log, without displaying that detailed worst-patch report in the main Execution window.
+
+3.40.15: 
+- Restored the chartread terminal Text widget to platform-native styling and reinforced 
+focus/Return routing, fixing a macOS Aqua/Tk regression where the calibration prompt opened but 
+keyboard input did not reach chartread.
+
+3.40.16:
+- Step 3 now asks ArgyllCMS to enumerate connected instruments before opening chartread, aborting 
+cleanly when no device is found or when the connected device does not match the selected CM/i1/3p 
+instrument family.
+
+3.40.17:
+- Step 3 instrument preflight now runs before any file-overwrite warning, so missing or mismatched 
+hardware is reported before the user is asked about existing output files.
+
+3.40.18:
+- The detailed profcheck run now includes labelled Lab axes and exposes its generated interactive 
+X3DOM through a browser-launch button that appears only while viewing the persistent project log.
+
+3.40.19:
+- Swapped the logfile-view Live Output and X3DOM button positions so View Log and Live Output 
+occupy the same screen position.
+
+3.40.20:
+- Corrected top-10 delta-E records in logfile to 10. The persistent profcheck summary now retains 
+the harmless patch-count line without counting it against the ten highest delta-E result entries.
+
+3.40.21:
+- Gamut Viewer now asks iccgamut to generate an independent X3DOM gamut model and provides a 3D 
+Gamut browser button within the Profile Metrics panel. The passive Execution and About text panes 
+now set explicit foreground, background, cursor, and selection colours to avoid platform/theme 
+contrast mismatches. The Execution screen now groups the persistent logfile, Show Gamut, and 3D 
+Error Map under a Details mode. Clear Window and Current Settings are hidden while Details is 
+shown, so the Details/Live Output toggle occupies the same screen position in both modes. Details 
+is enabled for a loaded project when its completed working ICC exists, and after a successful Step 
+4; beginning any new workflow step invalidates and disables it. When Details is opened for an older 
+completed project lacking the profcheck X3DOM file, YAAW generates the 3D Error Map on demand from 
+the existing TI3 and ICC without rebuilding the profile.
+
+3.40.22:
+- Code freeze (?)
+
+3.40.23:
+-  Loading any project JSON now resets the Execution page to Live Output before applying the new 
+project, preventing stale Details content from the previously loaded session.
+
+3.40.24:
+- Removed the redundant targen Ink Limit setting for Print RGB targets and replaced it with an 
+informative Device Space: Print RGB (- display beside Patches.
+
+3.40.25
+- The colprof Gamut Mapping (-S) field now defaults to <discovered Argyll root>/ref/sRGB.icm when 
+that file exists; otherwise it remains blank. ICC profile browse dialogs now show both 
+interchangeable .icc and .icm files by default.
