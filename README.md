@@ -12,6 +12,7 @@ YAAW has been developed and tested primarily under Linux Mint and macOS. Other U
 should work in principle, although paths, default applications, and platform-specific command behaviour
 may require adjustment.
 
+
 **Design philosophy**
 
 • Pure Python and tkinter: no GUI framework or browser-engine dependency is required.
@@ -26,10 +27,12 @@ configuration.
 
 • KISS first: useful diagnostics are available, but the primary workflow remains four clear steps.
 
+
 **The profiling workflow**
 
 YAAW organises the normal printer-profiling process into four stages: Create Target, Print Target,
 Read Target, and Build Profile.
+
 
 **1. Configuration**
 
@@ -43,6 +46,7 @@ internal descriptions include the instrument and patch count. This permits sever
 same paper to coexist without becoming anonymous.
 Project configurations are saved as JSON files and can be reloaded later. A similar job can therefore be
 used as a template: load it, change the paper or another identifying field, and continue with the new run.
+
 
 **2. Target generation and printing**
 
@@ -58,6 +62,7 @@ For the ColorMunki, proven examples include 460 patches on one A4 sheet and 960 
 A3 sheet. Standard lower-density Argyll layouts remain available, and further condensation may be
 explored with printtarg's -a option through Additional Arguments.
 
+
 **3. Measurement**
 
 chartread runs in a lightweight terminal-style window connected to a pseudo-terminal on Linux and
@@ -66,6 +71,7 @@ while the relevant keyboard input is passed directly to chartread.
 Before measurement begins, YAAW asks ArgyllCMS to enumerate connected instruments and checks
 that the selected instrument family is present. This catches missing or mismatched hardware before
 overwrite prompts or target reading begin.
+
 
 **4. Profile creation and validation**
 
@@ -78,6 +84,7 @@ the configured ICC output directory, which defaults to:
 profcheck then performs a compact validation and records a more detailed sorted report in the
 persistent project logfile. The report includes the highest delta-E patches and can generate a rotatable
 3D profile-error map showing measured-versus-predicted Lab residuals.
+
 
 **Inspection and diagnostics**
 
@@ -98,6 +105,7 @@ The static and 3D gamut views are independent of the profcheck error map. The ga
 the profile's colour-volume shape and extent, while the error map shows where profile predictions differ
 from the measured patches.
 
+
 **Logging, persistence, and safety**
 
 • A persistent logfile records commands, diagnostics, warnings, and profile-validation results.
@@ -114,12 +122,14 @@ from the measured patches.
 
 • Previously installed ICC profiles are not removed merely because a later rebuild fails.
 
+
 **Typical staged-printing workflow**
 
 The saved project configuration also supports a practical split workflow. Several targets can be
 generated and printed in one session, then left to dry. The corresponding JSON jobs can later be
 reopened for chartread measurement and profile generation without recreating the targets or re-
 entering the settings.
+
 
 **Requirements**
 
@@ -134,7 +144,9 @@ i1Pro3+.
 display.
 
 • A suitable measurement guide when using condensed strip-reading targets.
-Installation and paths
+
+
+**Installation and paths**
 
 YAAW is distributed as a single Python script. ArgyllCMS may be installed from the operating system's
 package manager or unpacked from the official upstream archive. At startup YAAW searches the
@@ -143,6 +155,7 @@ under the user's home directory, /opt, and /usr/local.
 
 Default working, profile-output, browse, and crash-recovery locations are defined near the top of the
 script and may be edited where local conventions differ.
+
 
 **Current feature summary**
 
@@ -169,6 +182,7 @@ script and may be edited where local conventions differ.
 • Static gamut plots, profile metrics, 3D gamut, and 3D profile-error map
 
 • Portable use of the system browser for X3DOM visualisations
+
 
 **Scope**
 
